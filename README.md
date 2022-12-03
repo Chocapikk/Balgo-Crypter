@@ -44,4 +44,4 @@ Le fichier **out.py** contiendra les commandes données ci-dessous.
 
 ## Remerciements
 
-Ce programme a été réalisé avec l'aide du projet [Openai Playground](https://github.com/openai/playground).
+Ce programme a été réalisé avec l'aide du projet [Openai Playground](https://github.com/openai/).
