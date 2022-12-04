@@ -26,34 +26,6 @@ def print_banner(banner):
     banner_colored = "".join(char_r)
     print(banner_colored)
     
-#!/usr/bin/env python3
-import argparse
-import binascii
-import random
-import re
-
-from termcolor import colored
-
-banner = '''
-╭━━╮╱╱╱╭╮╱╱╱╱╱╱╱╭━━━╮╱╱╱╱╱╱╱╱╭╮
-┃╭╮┃╱╱╱┃┃╱╱╱╱╱╱╱┃╭━╮┃╱╱╱╱╱╱╱╭╯╰╮
-┃╰╯╰┳━━┫┃╭━━┳━━╮┃┃╱╰╋━┳╮╱╭┳━┻╮╭╋━━┳━╮
-┃╭━╮┃╭╮┃┃┃╭╮┃╭╮┃┃┃╱╭┫╭┫┃╱┃┃╭╮┃┃┃┃━┫╭╯
-┃╰━╯┃╭╮┃╰┫╰╯┃╰╯┃┃╰━╯┃┃┃╰━╯┃╰╯┃╰┫┃━┫┃
-╰━━━┻╯╰┻━┻━╮┣━━╯╰━━━┻╯╰━╮╭┫╭━┻━┻━━┻╯
-╱╱╱╱╱╱╱╱╱╭━╯┃╱╱╱╱╱╱╱╱╱╭━╯┃┃┃
-╱╱╱╱╱╱╱╱╱╰━━╯╱╱╱╱╱╱╱╱╱╰━━╯╰╯
-    
-    '''
-def print_banner(banner):
-    rainbow_colors = ["red", "magenta", "blue", "cyan", "green", "yellow", "white"]
-    char_r = list(banner)
-    for i in range(len(char_r)):
-        if char_r[i] != "\n":
-            char_r[i] = colored(char_r[i], random.choice(rainbow_colors))
-    banner_colored = "".join(char_r)
-    print(banner_colored)
-    
 # Function To Generate Random Names
 def randomize_name(name):
     name_length = len(name)
