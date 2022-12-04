@@ -1,36 +1,36 @@
-
-
 # Balgo Crypter
 
 ![](images/banner.png)
 
-Balgo Crypter est un utilitaire de génération de charge utile de shell inverse codée Xor avec héxadécimal. Balgo Crypter a été développé par [Valentin Lobstein](https://github.com/Chocapikk).
+Balgo Crypter is a Xor encoded payload generation utility with hexadecimal. Balgo Crypter was developed by [Valentin Lobstein](https://github.com/Chocapikk).
 
 ## Installation
 
-Téléchargez le fichier **balgo_crypter.py** et exécutez-le en utilisant Python 3.
+To install the modules from the requirements.txt file use the following command: 
 
 ```sh
-python3 balgo_crypter.py
+git clone https://github.com/Chocapikk/Balgo-Crypter
+cd Balgo-Crypter
+pip install -r requirements.txt 
 ```
 
-## Utilisation
+## Usage
 
-Balgo Crypter peut prendre une commande de shell inverse et générer une charge utile à partir de cette commande.
+Balgo Crypter can take a reverse shell command and generate a payload from that command.
 
 ```sh
 python3 balgo_crypter.py -lh <host> -lp <port> -o <output_file>
 ```
 
-Si un fichier d'entrée est spécifié, la commande de shell inverse sera extraite de ce fichier.
+If an input file is specified the reverse shell command will be extracted from that file.
 
 ```sh
-python3 balgo_crypter.py -lh <host> -lp <port> -i <input_file> -o <output_file>
+python3 balgo_crypter.py  -i <input_file> -o <output_file>
 ```
 
-## Exemple
+## Example
 
-Voici un exemple du résultat obtenu avec Balgo Crypter.
+Here is an example of the result obtained with Balgo Crypter.
 
 ```sh
 python3 balgo_crypter.py -lh 127.0.0.1 -lp 1234 -o out.py
@@ -38,10 +38,11 @@ python3 balgo_crypter.py -lh 127.0.0.1 -lp 1234 -o out.py
 
 ![](images/example1.png)
 
-Le fichier **out.py** contiendra les commandes données ci-dessous.
+The **out.py** file will contain the commands given below.
 
 ![](images/example2.png)
 
-## Remerciements
+## Acknowledgements
 
-Ce programme a été réalisé avec l'aide du projet [Openai Playground](https://github.com/openai/).
+This program is made with help from the [Openai Playground](https://beta.openai.com/playground) project.
+
