@@ -21,6 +21,11 @@ Balgo Crypter can take a reverse shell command and generate a payload from that 
 ```sh
 python3 balgo_crypter.py -lh <host> -lp <port> -o <output_file>
 ```
+The -m option can be used to specify the encoding method to use for the payload. Currently, **xor** and **base64** are supported.
+
+```sh
+python3 balgo_crypter.py -lh <host> -lp <port> -o <output_file> -m <encoding_method>
+```
 
 If an input file is specified the reverse shell command will be extracted from that file.
 
