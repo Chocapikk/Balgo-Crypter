@@ -157,4 +157,5 @@ if __name__ == '__main__':
     parser.add_argument('-o', type=str, required=True, help='Specifies the output file for the payload.')
     parser.add_argument('-m', type=str, choices=['xor','base64','gzip'], default='xor', help='Specifies the encoding module to use for the payload.')
     args = parser.parse_args()
+    print_banner(banner)
     reverse_shell_gen(args.lh, args.lp, args.i, args.o, args.m)
